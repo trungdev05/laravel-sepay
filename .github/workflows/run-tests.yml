@@ -20,6 +20,30 @@ jobs:
           - laravel: 10.*
             testbench: 8.*
             carbon: ^2.63
+          - php: 8.3
+            os: ubuntu-latest
+            laravel: 13.*
+            testbench: 11.*
+            carbon: ^3.10
+            stability: prefer-lowest
+          - php: 8.4
+            os: ubuntu-latest
+            laravel: 13.*
+            testbench: 11.*
+            carbon: ^3.10
+            stability: prefer-lowest
+          - php: 8.3
+            os: ubuntu-latest
+            laravel: 13.*
+            testbench: 11.*
+            carbon: ^3.10
+            stability: prefer-stable
+          - php: 8.4
+            os: ubuntu-latest
+            laravel: 13.*
+            testbench: 11.*
+            carbon: ^3.10
+            stability: prefer-stable
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
@@ -39,6 +63,12 @@ jobs:
           echo "::add-matcher::${{ runner.tool_cache }}/php.json"
           echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
+      - name: Prepare Laravel 13 test dependencies
+        if: matrix.laravel == '13.*'
+        run: |
+          composer remove nunomaduro/larastan --dev --no-interaction --no-update
+          composer require "nunomaduro/collision:^8.9" "pestphp/pest:^4.4" "pestphp/pest-plugin-arch:^4.0" "pestphp/pest-plugin-laravel:^4.1" --dev --no-interaction --no-update
+
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" "nesbot/carbon:${{ matrix.carbon }}" --no-interaction --no-update
@@ -48,4 +78,9 @@ jobs:
         run: composer show -D
 
       - name: Execute tests
+        if: matrix.laravel != '13.*'
         run: vendor/bin/pest --ci
+
+      - name: Execute Laravel 13 tests
+        if: matrix.laravel == '13.*'
+        run: vendor/bin/pest --no-coverage
